@@ -1,0 +1,115 @@
+﻿column,dtype,chinese,group,null_pct,changed_by_us,official_definition_en
+Year,SMALLINT,年份,研究问题1 时间规律,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Year
+Quarter,SMALLINT,季度(1-4),研究问题1 时间规律,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Quarter (1-4)
+Month,SMALLINT,月份(1-12),研究问题1 时间规律,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Month
+DayofMonth,SMALLINT,日(1-31),研究问题1 时间规律,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Day of Month
+DayOfWeek,SMALLINT,"星期(1=周一, 7=周日)",研究问题1 时间规律,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Day of Week
+FlightDate,DATE,航班日期,研究问题1 时间规律,0.0,改过 — 类型：字符串 → DATE（取值不变）,Flight Date (yyyymmdd)
+Reporting_Airline,VARCHAR,报告承运人代码(分析跨年统一口径),研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Unique Carrier Code. When the same code has been used by multiple carriers, a numeric suffix is used for earlier users, for example, PA, PA(1), PA(2). Use this field for analysis across a range of years."
+DOT_ID_Reporting_Airline,INTEGER,承运人 DOT 编号,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"An identification number assigned by US DOT to identify a unique airline (carrier). A unique airline (carrier) is defined as one holding and reporting under the same DOT certificate regardless of its Code, Name, or holding company/corporation."
+IATA_CODE_Reporting_Airline,VARCHAR,承运人 IATA 代码(跨年可能重复),研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Code assigned by IATA and commonly used to identify a carrier. As the same code may have been assigned to different carriers over time, the code is not always unique. For analysis, use the Unique Carrier Code."
+Tail_Number,VARCHAR,飞机尾号,飞机与机组,0.23,没改 — 原样保留（仅编码与空值处理）,Tail Number
+Flight_Number_Reporting_Airline,INTEGER,航班号,飞机与机组,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,Flight Number
+OriginAirportID,INTEGER,起飞机场 DOT 编号(跨年稳定),研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Origin Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused."
+OriginAirportSeqID,INTEGER,起飞机场时序编号(属性变化时变化),研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Origin Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates, may change over time."
+OriginCityMarketID,INTEGER,起飞城市市场编号(可合并同城多机场),研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Origin Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market."
+Origin,VARCHAR,起飞机场三字码,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,Origin Airport
+OriginCityName,VARCHAR,起飞城市名,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Origin Airport, City Name"
+OriginState,VARCHAR,起飞州缩写,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Origin Airport, State Code"
+OriginStateFips,VARCHAR,起飞州 FIPS 码,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Origin Airport, State Fips"
+OriginStateName,VARCHAR,起飞州全名,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Origin Airport, State Name"
+OriginWac,SMALLINT,起飞地世界区域码,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,"Origin Airport, World Area Code"
+DestAirportID,INTEGER,到达机场 DOT 编号,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Destination Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused."
+DestAirportSeqID,INTEGER,到达机场时序编号,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Destination Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates, may change over time."
+DestCityMarketID,INTEGER,到达城市市场编号,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → INTEGER（取值不变）,"Destination Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market."
+Dest,VARCHAR,到达机场三字码,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,Destination Airport
+DestCityName,VARCHAR,到达城市名,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Destination Airport, City Name"
+DestState,VARCHAR,到达州缩写,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Destination Airport, State Code"
+DestStateFips,VARCHAR,到达州 FIPS 码,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Destination Airport, State Fips"
+DestStateName,VARCHAR,到达州全名,研究问题2 机场/航司/时段,0.0,没改 — 原样保留（仅编码与空值处理）,"Destination Airport, State Name"
+DestWac,SMALLINT,到达地世界区域码,研究问题2 机场/航司/时段,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,"Destination Airport, World Area Code"
+CRSDepTime,SMALLINT,计划起飞时间(本地 hhmm),延误度量,0.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,CRS Departure Time (local time: hhmm)
+DepTime,SMALLINT,"实际起飞时间(本地 hhmm, 2400=次日零点)",延误度量,1.315,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Actual Departure Time (local time: hhmm)
+DepDelay,DOUBLE,"起飞延误(分钟, 负=提前)",延误度量,1.319,改过 — 类型：字符串 → DOUBLE（取值不变）,Difference in minutes between scheduled and actual departure time. Early departures show negative numbers.
+DepDelayMinutes,DOUBLE,起飞延误分钟(负值截断为0),延误度量,1.319,改过 — 类型：字符串 → DOUBLE（取值不变）,Difference in minutes between scheduled and actual departure time. Early departures set to 0.
+DepDel15,TINYINT,起飞是否延误≥15分钟(1/0),延误度量,1.319,"改过 — 类型：字符串 `""0.00""`/`""1.00""` → TINYINT `0`/`1`（取值含义不变）","Departure Delay Indicator, 15 Minutes or More (1=Yes)"
+DepartureDelayGroups,SMALLINT,起飞延误分组(-2..12),延误度量,1.319,改过 — 类型：字符串 → SMALLINT（取值不变）,"Departure Delay intervals, every (15 minutes from 180)"
+DepTimeBlk,VARCHAR,计划起飞时段(如 0800-0859),研究问题1 时间规律,0.0,没改 — 原样保留（仅编码与空值处理）,"CRS Departure Time Block, Hourly Intervals"
+TaxiOut,DOUBLE,滑出时间(分钟),延误度量,1.363,改过 — 类型：字符串 → DOUBLE（取值不变）,"Taxi Out Time, in Minutes"
+WheelsOff,SMALLINT,实际离地时间(hhmm),延误度量,1.363,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm)
+WheelsOn,SMALLINT,实际接地时间(hhmm),延误度量,1.396,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm)
+TaxiIn,DOUBLE,滑入时间(分钟),延误度量,1.396,改过 — 类型：字符串 → DOUBLE（取值不变）,"Taxi In Time, in Minutes"
+CRSArrTime,SMALLINT,计划到达时间(本地 hhmm),延误度量,0.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,CRS Arrival Time (local time: hhmm)
+ArrTime,SMALLINT,"实际到达时间(本地 hhmm, 2400=次日零点)",延误度量,1.396,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Actual Arrival Time (local time: hhmm)
+ArrDelay,DOUBLE,"到达延误(分钟, 负=提前)",延误度量,1.627,改过 — 类型：字符串 → DOUBLE（取值不变）,Difference in minutes between scheduled and actual arrival time. Early arrivals show negative numbers.
+ArrDelayMinutes,DOUBLE,到达延误分钟(负值截断为0),延误度量,1.627,改过 — 类型：字符串 → DOUBLE（取值不变）,Difference in minutes between scheduled and actual arrival time. Early arrivals set to 0.
+ArrDel15,TINYINT,到达是否延误≥15分钟(1/0)【核心因变量】,延误度量,1.627,"改过 — 类型：字符串 `""0.00""`/`""1.00""` → TINYINT `0`/`1`（取值含义不变）","Arrival Delay Indicator, 15 Minutes or More (1=Yes)"
+ArrivalDelayGroups,SMALLINT,到达延误分组(-2..12),延误度量,1.627,改过 — 类型：字符串 → SMALLINT（取值不变）,"Arrival Delay intervals, every (15-minutes from 180)"
+ArrTimeBlk,VARCHAR,计划到达时段,研究问题1 时间规律,0.0,没改 — 原样保留（仅编码与空值处理）,"CRS Arrival Time Block, Hourly Intervals"
+Cancelled,TINYINT,是否取消(1/0),运行状态,0.0,"改过 — 类型：字符串 `""0.00""`/`""1.00""` → TINYINT `0`/`1`（取值含义不变）",Cancelled Flight Indicator (1=Yes)
+CancellationCode,VARCHAR,取消原因(A=承运人 B=天气 C=空管 D=安全),研究问题3 延误原因,98.628,没改 — 原样保留（仅编码与空值处理）,Specifies The Reason For Cancellation
+Diverted,TINYINT,是否备降(1/0),运行状态,0.0,"改过 — 类型：字符串 `""0.00""`/`""1.00""` → TINYINT `0`/`1`（取值含义不变）",Diverted Flight Indicator (1=Yes)
+CRSElapsedTime,DOUBLE,计划航程时间(分钟),延误度量,0.0,改过 — 类型：字符串 → DOUBLE（取值不变）,"CRS Elapsed Time of Flight, in Minutes"
+ActualElapsedTime,DOUBLE,实际航程时间(分钟),延误度量,1.627,改过 — 类型：字符串 → DOUBLE（取值不变）,"Elapsed Time of Flight, in Minutes"
+AirTime,DOUBLE,空中飞行时间(分钟),延误度量,1.627,改过 — 类型：字符串 → DOUBLE（取值不变）,"Flight Time, in Minutes"
+Flights,DOUBLE,"航班计数(恒为1, 用于加权求和)",延误度量,0.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Number of Flights
+Distance,DOUBLE,航段距离(英里),延误度量,0.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Distance between airports (miles)
+DistanceGroup,SMALLINT,"距离分组(1..11, 每250英里一档)",延误度量,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,"Distance Intervals, every 250 Miles, for Flight Segment"
+CarrierDelay,DOUBLE,延误原因：承运人自身(分钟),研究问题3 延误原因,79.113,改过 — 类型：字符串 → DOUBLE（取值不变）,"Carrier Delay, in Minutes"
+WeatherDelay,DOUBLE,延误原因：极端天气(分钟),研究问题3 延误原因,79.113,改过 — 类型：字符串 → DOUBLE（取值不变）,"Weather Delay, in Minutes"
+NASDelay,DOUBLE,延误原因：国家空域系统/空管(分钟),研究问题3 延误原因,79.113,改过 — 类型：字符串 → DOUBLE（取值不变）,"National Air System Delay, in Minutes"
+SecurityDelay,DOUBLE,延误原因：安检/安保(分钟),研究问题3 延误原因,79.113,改过 — 类型：字符串 → DOUBLE（取值不变）,"Security Delay, in Minutes"
+LateAircraftDelay,DOUBLE,延误原因：前序航班晚到(分钟),研究问题3 延误原因,79.113,改过 — 类型：字符串 → DOUBLE（取值不变）,"Late Aircraft Delay, in Minutes"
+FirstDepTime,SMALLINT,本架飞机当日首次起飞时间(hhmm),飞机与机组,99.287,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,First Gate Departure Time at Origin Airport
+TotalAddGTime,DOUBLE,本架飞机当日累计额外地面时间(分钟),飞机与机组,99.287,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate for Gate Return or Cancelled Flight
+LongestAddGTime,DOUBLE,本架飞机单次最长额外地面时间(分钟),飞机与机组,99.287,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Time Away from Gate for Gate Return or Cancelled Flight
+DivAirportLandings,SMALLINT,备降次数,运行状态,0.0,改过 — 类型：字符串 → SMALLINT（取值不变）,Number of Diverted Airport Landings
+DivReachedDest,DOUBLE,备降后是否最终抵达目的地(1/0),运行状态,99.745,改过 — 类型：字符串 → DOUBLE（取值不变）,Diverted Flight Reaching Scheduled Destination Indicator (1=Yes)
+DivActualElapsedTime,DOUBLE,含备降的实际航程时间(分钟),备降明细,99.769,改过 — 类型：字符串 → DOUBLE（取值不变）,"Elapsed Time of Diverted Flight Reaching Scheduled Destination, in Minutes.  The ActualElapsedTime column remains NULL for all diverted flights."
+DivArrDelay,DOUBLE,含备降的到达延误(分钟),备降明细,99.769,改过 — 类型：字符串 → DOUBLE（取值不变）,Difference in minutes between scheduled and actual arrival time for a diverted flight reaching scheduled destination.  The ArrDelay column remains NULL for all diverted flights.
+DivDistance,DOUBLE,备降额外飞行距离(英里),备降明细,99.745,改过 — 类型：字符串 → DOUBLE（取值不变）,Distance between scheduled destination and final diverted airport (miles).  Value will be 0 for diverted flight reaching scheduled destination.
+Div1Airport,VARCHAR,第1备降机场三字码,备降明细,99.736,没改 — 原样保留（仅编码与空值处理）,Diverted Airport Code1
+Div1AirportID,INTEGER,第1备降机场 DOT 编号,备降明细,99.736,改过 — 类型：字符串 → INTEGER（取值不变）,Airport ID of Diverted Airport 1. Airport ID is a Unique Key for an Airport
+Div1AirportSeqID,INTEGER,第1备降机场时序编号,备降明细,99.736,改过 — 类型：字符串 → INTEGER（取值不变）,Airport Sequence ID of Diverted Airport 1. Unique Key for Time Specific Information for an Airport
+Div1WheelsOn,SMALLINT,第1备降接地时间(hhmm),备降明细,99.736,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm) at Diverted Airport Code1
+Div1TotalGTime,DOUBLE,第1备降累计地面时间(分钟),备降明细,99.736,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate at Diverted Airport Code1
+Div1LongestGTime,DOUBLE,第1备降最长地面时间(分钟),备降明细,99.736,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Ground Time Away from Gate at Diverted Airport Code1
+Div1WheelsOff,SMALLINT,第1备降后离地时间(hhmm),备降明细,99.767,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm) at Diverted Airport Code1
+Div1TailNum,VARCHAR,第1备降航班尾号,备降明细,99.767,没改 — 原样保留（仅编码与空值处理）,Aircraft Tail Number for Diverted Airport Code1
+Div2Airport,VARCHAR,第2备降机场三字码,备降明细,99.997,没改 — 原样保留（仅编码与空值处理）,Diverted Airport Code2
+Div2AirportID,INTEGER,第2备降机场 DOT 编号,备降明细,99.997,改过 — 类型：字符串 → INTEGER（取值不变）,Airport ID of Diverted Airport 2. Airport ID is a Unique Key for an Airport
+Div2AirportSeqID,INTEGER,第2备降机场时序编号,备降明细,99.997,改过 — 类型：字符串 → INTEGER（取值不变）,Airport Sequence ID of Diverted Airport 2. Unique Key for Time Specific Information for an Airport
+Div2WheelsOn,SMALLINT,第2备降接地时间(hhmm),备降明细,99.997,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm) at Diverted Airport Code2
+Div2TotalGTime,DOUBLE,第2备降累计地面时间(分钟),备降明细,99.997,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate at Diverted Airport Code2
+Div2LongestGTime,DOUBLE,第2备降最长地面时间(分钟),备降明细,99.997,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Ground Time Away from Gate at Diverted Airport Code2
+Div2WheelsOff,SMALLINT,第2备降后离地时间(hhmm),备降明细,99.999,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm) at Diverted Airport Code2
+Div2TailNum,VARCHAR,第2备降航班尾号,备降明细,99.999,没改 — 原样保留（仅编码与空值处理）,Aircraft Tail Number for Diverted Airport Code2
+Div3Airport,VARCHAR,第3备降机场三字码,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Diverted Airport Code3
+Div3AirportID,INTEGER,第3备降机场 DOT 编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport ID of Diverted Airport 3. Airport ID is a Unique Key for an Airport
+Div3AirportSeqID,INTEGER,第3备降机场时序编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport Sequence ID of Diverted Airport 3. Unique Key for Time Specific Information for an Airport
+Div3WheelsOn,SMALLINT,第3备降接地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm) at Diverted Airport Code3
+Div3TotalGTime,DOUBLE,第3备降累计地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate at Diverted Airport Code3
+Div3LongestGTime,DOUBLE,第3备降最长地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Ground Time Away from Gate at Diverted Airport Code3
+Div3WheelsOff,SMALLINT,第3备降后离地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm) at Diverted Airport Code3
+Div3TailNum,VARCHAR,第3备降航班尾号,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Aircraft Tail Number for Diverted Airport Code3
+Div4Airport,VARCHAR,第4备降机场三字码,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Diverted Airport Code4
+Div4AirportID,INTEGER,第4备降机场 DOT 编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport ID of Diverted Airport 4. Airport ID is a Unique Key for an Airport
+Div4AirportSeqID,INTEGER,第4备降机场时序编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport Sequence ID of Diverted Airport 4. Unique Key for Time Specific Information for an Airport
+Div4WheelsOn,SMALLINT,第4备降接地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm) at Diverted Airport Code4
+Div4TotalGTime,DOUBLE,第4备降累计地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate at Diverted Airport Code4
+Div4LongestGTime,DOUBLE,第4备降最长地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Ground Time Away from Gate at Diverted Airport Code4
+Div4WheelsOff,SMALLINT,第4备降后离地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm) at Diverted Airport Code4
+Div4TailNum,VARCHAR,第4备降航班尾号,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Aircraft Tail Number for Diverted Airport Code4
+Div5Airport,VARCHAR,第5备降机场三字码,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Diverted Airport Code5
+Div5AirportID,INTEGER,第5备降机场 DOT 编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport ID of Diverted Airport 5. Airport ID is a Unique Key for an Airport
+Div5AirportSeqID,INTEGER,第5备降机场时序编号,备降明细,100.0,改过 — 类型：字符串 → INTEGER（取值不变）,Airport Sequence ID of Diverted Airport 5. Unique Key for Time Specific Information for an Airport
+Div5WheelsOn,SMALLINT,第5备降接地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels On Time (local time: hhmm) at Diverted Airport Code5
+Div5TotalGTime,DOUBLE,第5备降累计地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Total Ground Time Away from Gate at Diverted Airport Code5
+Div5LongestGTime,DOUBLE,第5备降最长地面时间(分钟),备降明细,100.0,改过 — 类型：字符串 → DOUBLE（取值不变）,Longest Ground Time Away from Gate at Diverted Airport Code5
+Div5WheelsOff,SMALLINT,第5备降后离地时间(hhmm),备降明细,100.0,改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留）,Wheels Off Time (local time: hhmm) at Diverted Airport Code5
+Div5TailNum,VARCHAR,第5备降航班尾号,备降明细,100.0,没改 — 原样保留（仅编码与空值处理）,Aircraft Tail Number for Diverted Airport Code5
+CRSDepHour,TINYINT,【派生】计划起飞小时(0-23),研究问题1 时间规律,0.0,改过 — 新增列：由 `CRSDepTime` 计算：`(hhmm // 100) % 24`，处理 2400 跨夜,
+CRSArrHour,TINYINT,【派生】计划到达小时(0-23),研究问题1 时间规律,0.0,改过 — 新增列：由 `CRSArrTime` 计算：`(hhmm // 100) % 24`,
+Route,VARCHAR,【派生】航线 = 起飞机场-到达机场,研究问题2 机场/航司/时段,0.0,改过 — 新增列：由 `Origin` 与 `Dest` 拼接：`Origin || '-' || Dest`,
+IsWeekend,BOOLEAN,【派生】是否周末(周六/周日),研究问题1 时间规律,0.0,"改过 — 新增列：由 `DayOfWeek` 计算：`DayOfWeek IN (6,7)`",
+TotalCauseDelay,DOUBLE,【派生】五项原因延误之和(分钟),研究问题3 延误原因,79.113,改过 — 新增列：五项 `*Delay` 求和；五项全为 NULL 时结果保留 NULL,

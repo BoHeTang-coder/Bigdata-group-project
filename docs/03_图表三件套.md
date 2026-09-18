@@ -1,0 +1,112 @@
+# 图表三件套 — 编号顺序、英文图注、支撑论点
+
+> 交付要求：每张图 = **PNG（300 dpi）+ 一句英文图注 + 这张图支撑的论点**。
+> **文件名编号 = Figure 编号 = 报告出现顺序**，三者完全一致，按 1→8 依次插入即可。
+> 顺序逻辑：先「是什么」(Fig 1)，再按三个研究问题推进 —— Q1 时间规律 (Fig 2–4) → Q2 机场/航司 (Fig 5–6) → Q3 原因归因 (Fig 7–8)。
+
+| Figure | 文件 | 图像规格 |
+|---|---|---|
+| **Figure 1** | `fig1_delay_distribution.png` | 3013×1777 px ｜ 299.9994 dpi ｜ 163 KB |
+| **Figure 2** | `fig2_month_weekday_heatmap.png` | 2771×2047 px ｜ 299.9994 dpi ｜ 229 KB |
+| **Figure 3** | `fig3_hourly_pattern.png` | 3013×1777 px ｜ 299.9994 dpi ｜ 304 KB |
+| **Figure 4** | `fig4_monthly_trend.png` | 3555×1777 px ｜ 299.9994 dpi ｜ 269 KB |
+| **Figure 5** | `fig5_airline_ranking.png` | 2879×2047 px ｜ 299.9994 dpi ｜ 267 KB |
+| **Figure 6** | `fig6_worst_airports.png` | 3236×2047 px ｜ 299.9994 dpi ｜ 289 KB |
+| **Figure 7** | `fig7_delay_causes.png` | 3704×1669 px ｜ 299.9994 dpi ｜ 230 KB |
+| **Figure 8** | `fig8_airport_cause_profile.png` | 3186×2047 px ｜ 299.9994 dpi ｜ 249 KB |
+
+---
+
+## Figure 1 — `fig1_delay_distribution.png`
+
+**English caption**
+
+> Arrival delays are strongly right-skewed: the median flight arrives 6 minutes early, yet 21.2% of flights arrive 15 or more minutes late, producing a long tail beyond three hours.
+
+**这张图支撑的论点**
+
+延误不是「普遍小幅晚点」，而是「多数准点 + 少数极端延误」的长尾结构。因此报告必须把「延误率（频次）」与「延误严重度（时长）」分开度量——只看平均值会严重误导（平均 +7.4 分钟，但中位数其实是提前 6 分钟）。
+
+---
+
+## Figure 2 — `fig2_month_weekday_heatmap.png`
+
+**English caption**
+
+> Delay risk is dominated by a single summer peak (the worst July cells reach 32-33% late against a 12% best cell in October), and across the whole period Friday and Sunday are the worst days to fly (23-24% late) while Tuesday is the most reliable (17.9%).
+
+**这张图支撑的论点**
+
+延误呈**单峰**结构，不是双峰：夏季 6–7 月是绝对高峰（月均 29.0% / 26.7%，最糟格子 7 月周日 32.5%），秋季 9–11 月是低谷（16.3–16.9%）。周内呈「周五、周日高（23–24%），周二低（17.9%）」的节律。这说明延误是可预测的系统负荷函数，而非随机噪声，为「按日历提前调配运力」提供依据。
+
+---
+
+## Figure 3 — `fig3_hourly_pattern.png`
+
+**English caption**
+
+> Punctuality deteriorates almost monotonically from 8.9% late for 05:00 departures to a three-year average of 30.5% at 19:00 (peaking at 32.6% in 2025), and the pattern is nearly identical in all three years (the separate 00:00-04:00 red-eye group, only 0.3% of flights, runs at 17-27% late).
+
+**这张图支撑的论点**
+
+延误在一天内近乎单调累积，从 05:00 的 8.9% 升至 19:00 的三年均值 30.5%（2025 年最高达 32.6%），且三年曲线形状几乎重合。这证明「延误是运力在日内被逐步耗尽的结果」，为「通过调整航班波结构提升准点率」提供直接依据。
+
+---
+
+## Figure 4 — `fig4_monthly_trend.png`
+
+**English caption**
+
+> Delay rates follow a single sharp summer peak (29.6% in July 2024) and an autumn trough (13.2% in October 2024), while December's elevation comes almost entirely from the 26-29 December post-Christmas window; cancellation spikes are instead event-driven, the worst single day of the whole period being 19 July 2024 (16.5% of flights cancelled), the day of the CrowdStrike IT outage.
+
+**这张图支撑的论点**
+
+延误率是**季节性、可预测**的（夏季单峰 29.6%，秋季低谷 13.2%）；取消率是**事件驱动、不可预测**的（2024-07-19 CrowdStrike 单日取消 16.5%，为全期最惨）。两者生成机制不同，报告必须分开论述。另需注意：12 月整体只是年均水平（21.2%），但内部差异极大——12 月 25 日仅 11.4%（全年最好之一），而 12 月 26–29 日高达 30–33%，是典型的节后返程高峰效应。
+
+---
+
+## Figure 5 — `fig5_airline_ranking.png`
+
+**English caption**
+
+> Low-cost carriers Frontier, JetBlue and Spirit are the least punctual at 25-29% late arrivals, whereas Delta, Endeavor and Republic keep late arrivals below 19%.
+
+**这张图支撑的论点**
+
+航司间准点率差距接近 2 倍（14.9% vs 29.3%），且与商业模式高度相关：低成本/超低成本承运人（F9、B6、NK）显著垫底。这支持「延误主要源于航司自身的运力调度与航班波结构，而非单纯天气」这一判断。
+
+---
+
+## Figure 6 — `fig6_worst_airports.png`
+
+**English caption**
+
+> Florida airports dominate the worst-punctuality list, with Fort Lauderdale, Miami and Orlando all above 25% late arrivals, while Dallas/Fort Worth is the worst major hub among the ten busiest airports.
+
+**这张图支撑的论点**
+
+延误风险在地理上高度集中：佛罗里达机场系统性进入最差榜单（FLL/MIA/SFB/MCO/PBI），反映雷暴带与高密度休闲客流的叠加效应；同时 DFW 作为全美第三大枢纽同样高危，说明「枢纽规模大」并不等于「准点率高」。
+
+---
+
+## Figure 7 — `fig7_delay_causes.png`
+
+**English caption**
+
+> Late-arriving aircraft (39.9%) and carrier-internal problems (34.4%) together account for three quarters of all delay minutes, whereas weather is directly blamed for only 5.9% — and this mix barely moves across 2023-2025.
+
+**这张图支撑的论点**
+
+天气只占延误分钟的 5.9%，而「前序航班晚到 + 航司自身」合计 74.3%，说明延误主因是系统内部传导而非外部冲击。但须强调：前序航班晚到中有相当部分是天气的间接后果，因此不应把「天气」与「系统」对立，而应刻画传导链条。三年构成稳定（各原因波动 ≤4 个百分点）进一步证明这是结构性问题，不是偶发。
+
+---
+
+## Figure 8 — `fig8_airport_cause_profile.png`
+
+**English caption**
+
+> Delay-cause mixes are broadly similar across the busiest hubs, but Dallas/Fort Worth carries the largest direct weather share (8.1% vs. 2.5-2.8% at Phoenix and Las Vegas), New York LaGuardia and Boston lean hardest on national-airspace restrictions (25%), and Atlanta's delays are the most carrier-driven (45.1%).
+
+**这张图支撑的论点**
+
+不同枢纽的延误成因结构显著不同：DFW 天气占比最高（8.1%），LGA/BOS 空管占比最高（25%），ATL 航司自身占比最高（45.1%）。这说明「一刀切」的延误治理政策无效，应按机场类型差异化施策。
