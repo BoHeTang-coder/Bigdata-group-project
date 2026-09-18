@@ -1,0 +1,28 @@
+{
+  "columns_kept": 109,
+  "derived_columns": [
+    "CRSDepHour",
+    "CRSArrHour",
+    "Route",
+    "IsWeekend",
+    "TotalCauseDelay"
+  ],
+  "years": {
+    "2023": {
+      "rows": 6847899,
+      "parquet_bytes": 197988418
+    },
+    "2024": {
+      "rows": 7079061,
+      "parquet_bytes": 194491863
+    },
+    "2025": {
+      "rows": 7001619,
+      "parquet_bytes": 205002828
+    }
+  },
+  "total_rows": 20928579,
+  "total_bytes": 597483109,
+  "total_gb": 0.556,
+  "generated_at": "2026-09-16T02:50:24"
+}

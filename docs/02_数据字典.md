@@ -1,0 +1,224 @@
+# 数据字典 — BTS On-Time Performance 清洗后数据集
+
+> 数据源：U.S. DOT/BTS TranStats, *Reporting Carrier On-Time Performance (1987-present)*，2023-01 ~ 2025-12
+> 记录数：**20,928,579** 行 ｜ 字段数：**114** 列（官方 109 列 + 5 个派生列）
+> 物理类型与缺失率由 Parquet 与全量数据实测得出；英文定义逐字取自官方 `readme.html`
+
+## 使用口径（务必先读）
+
+- **延误率** = `AVG(ArrDel15)`，分母是 `ArrDel15 IS NOT NULL` 的航班，即**实际执行的航班**。取消与备降航班的 `ArrDel15` 为 NULL，不计入分母。
+- **取消率** = `AVG(Cancelled)`，分母是全部航班。
+- **延误原因占比** = 各原因分钟数 ÷ 五项原因分钟数之和。原因字段**仅对 `ArrDel15 = 1` 的航班填写**（已实测 100% 符合）；其中 4,371,285 条的五项之和精确等于 `ArrDelayMinutes`，另有 18 条例外，见下文「已知数据质量问题」。
+- `CRSDepTime` 等 hhmm 字段已转为整数，`2400` 表示次日零点；派生列 `CRSDepHour` 已用 `(hhmm // 100) % 24` 处理跨夜。
+- 编码为 UTF-8（原始 CSV 为 latin-1，已在清洗时转换）。
+
+## 这批数据我改过什么（总览）
+
+**没有任何一行被删除，也没有任何取值被修改。** 本项目的全部改动只有三类：
+
+| # | 改动 | 涉及范围 | 具体做法 | 为什么 |
+|---|---|---|---|---|
+| 1 | **丢弃 1 个空列** | 1 列 × 全部 20,928,579 行<br>（**不删任何一行**） | BTS 的 CSV 每行末尾都多一个逗号，标准解析会把它当成第 110 个字段。该字段在表头无名字、在数据里**恒为空**，已丢弃 | 它不是真实字段。若不丢弃，列数会变成 110 而非 109，数据字典会多记一个根本不存在的列 |
+| 2 | **类型转换（取值不变）** | 108 个原字段 | 字符串 → DATE / SMALLINT / INTEGER / DOUBLE / TINYINT；`"0.00"`/`"1.00"` → `0`/`1` | 原始 CSV 全部是文本，不转类型无法做数值计算，且体积大 16 倍 |
+| 3 | **新增 5 个派生列** | 见下表 | `CRSDepHour` / `CRSArrHour` / `Route` / `IsWeekend` / `TotalCauseDelay` | 团队做时段、航线、周末对比时反复要用，预计算可避免每人各写一遍口径 |
+
+另外两项**全局处理**（不改变任何取值）：原始 CSV 为 `latin-1` 编码 → 统一转 UTF-8；空字符串 `""` → NULL（DuckDB 读入时自动完成，与 BTS 的 NULL 语义一致）。
+
+> 逐字段的「是否改过 / 怎么改」见下方字段清单的 **改动** 列。
+
+### 关于第 1 条「丢弃 1 个空列」的详细说明
+
+这是**唯一一个容易被误解为「动了数据」的改动**，所以单独说清楚。
+
+**BTS 的原始 CSV 长这样**（每行末尾都有一个逗号）：
+
+```
+"Year","Quarter",...,"Div5WheelsOff","Div5TailNum",      ← 表头，末尾一个逗号
+2023,1,1,2,1,2023-01-02,"9E",...,"","","","",           ← 数据行，末尾一个逗号
+```
+
+按 CSV 规范，**每一个逗号都分隔两个字段**，所以 `A,B,C,` 是 **4 个字段**（第 4 个为空），而不是 3 个。于是：
+
+- 表头行有 109 个逗号 → 解析出 **110 个字段名**，第 110 个是**空名字**
+- 数据行同理 → 解析出 **110 个值**，第 110 个**恒为空字符串**
+
+**主流工具会怎么处理它**（若不主动丢弃）：
+
+| 工具 | 列数 | 第 110 列被命名为什么 | 内容 |
+|---|---|---|---|
+| `pandas.read_csv` | 110 | `Unnamed: 109` | 全部 NaN |
+| DuckDB `read_csv` | 110 | `column109` | 全部 NULL |
+| Python `csv.reader` | 110 | 无名字，`row[-1] == ''` | 全部空字符串 |
+
+**已实测验证**（`scripts/23_verify_trailing_column.py`）：扫描全部 36 个 CSV、**20,928,579 行**，结果：
+
+- 第 110 个字段**非空的行数 = 0**
+- 字段数不等于 110 的行数 = **0**
+
+**结论：丢弃这一列不损失任何信息**（它的每一行都是空的），但保留它会让所有下游的「字段数」统计多出 1。注意区分：**这是丢弃 1 个「列」，不是删除任何「行」——行数始终是 20,928,579。**
+
+## 字段清单
+
+| # | 字段名 | 类型 | 中文含义 | 分类 | 缺失率 | 改动 | 官方定义（英文） |
+|---|---|---|---|---|---|---|---|
+| 1 | `Year` | SMALLINT | 年份 | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Year |
+| 2 | `Quarter` | SMALLINT | 季度(1-4) | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Quarter (1-4) |
+| 3 | `Month` | SMALLINT | 月份(1-12) | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Month |
+| 4 | `DayofMonth` | SMALLINT | 日(1-31) | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Day of Month |
+| 5 | `DayOfWeek` | SMALLINT | 星期(1=周一, 7=周日) | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Day of Week |
+| 6 | `FlightDate` | DATE | 航班日期 | 研究问题1 时间规律 | 0.00% | 改过 — 类型：字符串 → DATE（取值不变） | Flight Date (yyyymmdd) |
+| 7 | `Reporting_Airline` | VARCHAR | 报告承运人代码(分析跨年统一口径) | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Unique Carrier Code. When the same code has been used by multiple carriers, a numeric suffix is used for earlier users, for example, PA, PA(1), PA(2). Use this field for analysis across a range of ... |
+| 8 | `DOT_ID_Reporting_Airline` | INTEGER | 承运人 DOT 编号 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | An identification number assigned by US DOT to identify a unique airline (carrier). A unique airline (carrier) is defined as one holding and reporting under the same DOT certificate regardless of i... |
+| 9 | `IATA_CODE_Reporting_Airline` | VARCHAR | 承运人 IATA 代码(跨年可能重复) | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Code assigned by IATA and commonly used to identify a carrier. As the same code may have been assigned to different carriers over time, the code is not always unique. For analysis, use the Unique C... |
+| 10 | `Tail_Number` | VARCHAR | 飞机尾号 | 飞机与机组 | 0.23% | 没改 — 原样保留（仅编码与空值处理） | Tail Number |
+| 11 | `Flight_Number_Reporting_Airline` | INTEGER | 航班号 | 飞机与机组 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Flight Number |
+| 12 | `OriginAirportID` | INTEGER | 起飞机场 DOT 编号(跨年稳定) | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Origin Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change its ... |
+| 13 | `OriginAirportSeqID` | INTEGER | 起飞机场时序编号(属性变化时变化) | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Origin Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates, may... |
+| 14 | `OriginCityMarketID` | INTEGER | 起飞城市市场编号(可合并同城多机场) | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Origin Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market. |
+| 15 | `Origin` | VARCHAR | 起飞机场三字码 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Origin Airport |
+| 16 | `OriginCityName` | VARCHAR | 起飞城市名 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Origin Airport, City Name |
+| 17 | `OriginState` | VARCHAR | 起飞州缩写 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Origin Airport, State Code |
+| 18 | `OriginStateFips` | VARCHAR | 起飞州 FIPS 码 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Origin Airport, State Fips |
+| 19 | `OriginStateName` | VARCHAR | 起飞州全名 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Origin Airport, State Name |
+| 20 | `OriginWac` | SMALLINT | 起飞地世界区域码 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Origin Airport, World Area Code |
+| 21 | `DestAirportID` | INTEGER | 到达机场 DOT 编号 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Destination Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change... |
+| 22 | `DestAirportSeqID` | INTEGER | 到达机场时序编号 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Destination Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates... |
+| 23 | `DestCityMarketID` | INTEGER | 到达城市市场编号 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Destination Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market. |
+| 24 | `Dest` | VARCHAR | 到达机场三字码 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Destination Airport |
+| 25 | `DestCityName` | VARCHAR | 到达城市名 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Destination Airport, City Name |
+| 26 | `DestState` | VARCHAR | 到达州缩写 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Destination Airport, State Code |
+| 27 | `DestStateFips` | VARCHAR | 到达州 FIPS 码 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Destination Airport, State Fips |
+| 28 | `DestStateName` | VARCHAR | 到达州全名 | 研究问题2 机场/航司/时段 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | Destination Airport, State Name |
+| 29 | `DestWac` | SMALLINT | 到达地世界区域码 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Destination Airport, World Area Code |
+| 30 | `CRSDepTime` | SMALLINT | 计划起飞时间(本地 hhmm) | 延误度量 | 0.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | CRS Departure Time (local time: hhmm) |
+| 31 | `DepTime` | SMALLINT | 实际起飞时间(本地 hhmm, 2400=次日零点) | 延误度量 | 1.31% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Actual Departure Time (local time: hhmm) |
+| 32 | `DepDelay` | DOUBLE | 起飞延误(分钟, 负=提前) | 延误度量 | 1.32% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Difference in minutes between scheduled and actual departure time. Early departures show negative numbers. |
+| 33 | `DepDelayMinutes` | DOUBLE | 起飞延误分钟(负值截断为0) | 延误度量 | 1.32% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Difference in minutes between scheduled and actual departure time. Early departures set to 0. |
+| 34 | `DepDel15` | TINYINT | 起飞是否延误≥15分钟(1/0) | 延误度量 | 1.32% | 改过 — 类型：字符串 `"0.00"`/`"1.00"` → TINYINT `0`/`1`（取值含义不变） | Departure Delay Indicator, 15 Minutes or More (1=Yes) |
+| 35 | `DepartureDelayGroups` | SMALLINT | 起飞延误分组(-2..12) | 延误度量 | 1.32% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Departure Delay intervals, every (15 minutes from 180) |
+| 36 | `DepTimeBlk` | VARCHAR | 计划起飞时段(如 0800-0859) | 研究问题1 时间规律 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | CRS Departure Time Block, Hourly Intervals |
+| 37 | `TaxiOut` | DOUBLE | 滑出时间(分钟) | 延误度量 | 1.36% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Taxi Out Time, in Minutes |
+| 38 | `WheelsOff` | SMALLINT | 实际离地时间(hhmm) | 延误度量 | 1.36% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) |
+| 39 | `WheelsOn` | SMALLINT | 实际接地时间(hhmm) | 延误度量 | 1.40% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) |
+| 40 | `TaxiIn` | DOUBLE | 滑入时间(分钟) | 延误度量 | 1.40% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Taxi In Time, in Minutes |
+| 41 | `CRSArrTime` | SMALLINT | 计划到达时间(本地 hhmm) | 延误度量 | 0.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | CRS Arrival Time (local time: hhmm) |
+| 42 | `ArrTime` | SMALLINT | 实际到达时间(本地 hhmm, 2400=次日零点) | 延误度量 | 1.40% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Actual Arrival Time (local time: hhmm) |
+| 43 | `ArrDelay` | DOUBLE | 到达延误(分钟, 负=提前) | 延误度量 | 1.63% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Difference in minutes between scheduled and actual arrival time. Early arrivals show negative numbers. |
+| 44 | `ArrDelayMinutes` | DOUBLE | 到达延误分钟(负值截断为0) | 延误度量 | 1.63% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Difference in minutes between scheduled and actual arrival time. Early arrivals set to 0. |
+| 45 | `ArrDel15` | TINYINT | 到达是否延误≥15分钟(1/0)【核心因变量】 | 延误度量 | 1.63% | 改过 — 类型：字符串 `"0.00"`/`"1.00"` → TINYINT `0`/`1`（取值含义不变） | Arrival Delay Indicator, 15 Minutes or More (1=Yes) |
+| 46 | `ArrivalDelayGroups` | SMALLINT | 到达延误分组(-2..12) | 延误度量 | 1.63% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Arrival Delay intervals, every (15-minutes from 180) |
+| 47 | `ArrTimeBlk` | VARCHAR | 计划到达时段 | 研究问题1 时间规律 | 0.00% | 没改 — 原样保留（仅编码与空值处理） | CRS Arrival Time Block, Hourly Intervals |
+| 48 | `Cancelled` | TINYINT | 是否取消(1/0) | 运行状态 | 0.00% | 改过 — 类型：字符串 `"0.00"`/`"1.00"` → TINYINT `0`/`1`（取值含义不变） | Cancelled Flight Indicator (1=Yes) |
+| 49 | `CancellationCode` | VARCHAR | 取消原因(A=承运人 B=天气 C=空管 D=安全) | 研究问题3 延误原因 | 98.63% | 没改 — 原样保留（仅编码与空值处理） | Specifies The Reason For Cancellation |
+| 50 | `Diverted` | TINYINT | 是否备降(1/0) | 运行状态 | 0.00% | 改过 — 类型：字符串 `"0.00"`/`"1.00"` → TINYINT `0`/`1`（取值含义不变） | Diverted Flight Indicator (1=Yes) |
+| 51 | `CRSElapsedTime` | DOUBLE | 计划航程时间(分钟) | 延误度量 | 0.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | CRS Elapsed Time of Flight, in Minutes |
+| 52 | `ActualElapsedTime` | DOUBLE | 实际航程时间(分钟) | 延误度量 | 1.63% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Elapsed Time of Flight, in Minutes |
+| 53 | `AirTime` | DOUBLE | 空中飞行时间(分钟) | 延误度量 | 1.63% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Flight Time, in Minutes |
+| 54 | `Flights` | DOUBLE | 航班计数(恒为1, 用于加权求和) | 延误度量 | 0.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Number of Flights |
+| 55 | `Distance` | DOUBLE | 航段距离(英里) | 延误度量 | 0.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Distance between airports (miles) |
+| 56 | `DistanceGroup` | SMALLINT | 距离分组(1..11, 每250英里一档) | 延误度量 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Distance Intervals, every 250 Miles, for Flight Segment |
+| 57 | `CarrierDelay` | DOUBLE | 延误原因：承运人自身(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Carrier Delay, in Minutes |
+| 58 | `WeatherDelay` | DOUBLE | 延误原因：极端天气(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Weather Delay, in Minutes |
+| 59 | `NASDelay` | DOUBLE | 延误原因：国家空域系统/空管(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 类型：字符串 → DOUBLE（取值不变） | National Air System Delay, in Minutes |
+| 60 | `SecurityDelay` | DOUBLE | 延误原因：安检/安保(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Security Delay, in Minutes |
+| 61 | `LateAircraftDelay` | DOUBLE | 延误原因：前序航班晚到(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Late Aircraft Delay, in Minutes |
+| 62 | `FirstDepTime` | SMALLINT | 本架飞机当日首次起飞时间(hhmm) | 飞机与机组 | 99.29% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | First Gate Departure Time at Origin Airport |
+| 63 | `TotalAddGTime` | DOUBLE | 本架飞机当日累计额外地面时间(分钟) | 飞机与机组 | 99.29% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate for Gate Return or Cancelled Flight |
+| 64 | `LongestAddGTime` | DOUBLE | 本架飞机单次最长额外地面时间(分钟) | 飞机与机组 | 99.29% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Time Away from Gate for Gate Return or Cancelled Flight |
+| 65 | `DivAirportLandings` | SMALLINT | 备降次数 | 运行状态 | 0.00% | 改过 — 类型：字符串 → SMALLINT（取值不变） | Number of Diverted Airport Landings |
+| 66 | `DivReachedDest` | DOUBLE | 备降后是否最终抵达目的地(1/0) | 运行状态 | 99.75% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Diverted Flight Reaching Scheduled Destination Indicator (1=Yes) |
+| 67 | `DivActualElapsedTime` | DOUBLE | 含备降的实际航程时间(分钟) | 备降明细 | 99.77% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Elapsed Time of Diverted Flight Reaching Scheduled Destination, in Minutes.  The ActualElapsedTime column remains NULL for all diverted flights. |
+| 68 | `DivArrDelay` | DOUBLE | 含备降的到达延误(分钟) | 备降明细 | 99.77% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Difference in minutes between scheduled and actual arrival time for a diverted flight reaching scheduled destination.  The ArrDelay column remains NULL for all diverted flights. |
+| 69 | `DivDistance` | DOUBLE | 备降额外飞行距离(英里) | 备降明细 | 99.75% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Distance between scheduled destination and final diverted airport (miles).  Value will be 0 for diverted flight reaching scheduled destination. |
+| 70 | `Div1Airport` | VARCHAR | 第1备降机场三字码 | 备降明细 | 99.74% | 没改 — 原样保留（仅编码与空值处理） | Diverted Airport Code1 |
+| 71 | `Div1AirportID` | INTEGER | 第1备降机场 DOT 编号 | 备降明细 | 99.74% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport ID of Diverted Airport 1. Airport ID is a Unique Key for an Airport |
+| 72 | `Div1AirportSeqID` | INTEGER | 第1备降机场时序编号 | 备降明细 | 99.74% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport Sequence ID of Diverted Airport 1. Unique Key for Time Specific Information for an Airport |
+| 73 | `Div1WheelsOn` | SMALLINT | 第1备降接地时间(hhmm) | 备降明细 | 99.74% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) at Diverted Airport Code1 |
+| 74 | `Div1TotalGTime` | DOUBLE | 第1备降累计地面时间(分钟) | 备降明细 | 99.74% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate at Diverted Airport Code1 |
+| 75 | `Div1LongestGTime` | DOUBLE | 第1备降最长地面时间(分钟) | 备降明细 | 99.74% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Ground Time Away from Gate at Diverted Airport Code1 |
+| 76 | `Div1WheelsOff` | SMALLINT | 第1备降后离地时间(hhmm) | 备降明细 | 99.77% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) at Diverted Airport Code1 |
+| 77 | `Div1TailNum` | VARCHAR | 第1备降航班尾号 | 备降明细 | 99.77% | 没改 — 原样保留（仅编码与空值处理） | Aircraft Tail Number for Diverted Airport Code1 |
+| 78 | `Div2Airport` | VARCHAR | 第2备降机场三字码 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Diverted Airport Code2 |
+| 79 | `Div2AirportID` | INTEGER | 第2备降机场 DOT 编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport ID of Diverted Airport 2. Airport ID is a Unique Key for an Airport |
+| 80 | `Div2AirportSeqID` | INTEGER | 第2备降机场时序编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport Sequence ID of Diverted Airport 2. Unique Key for Time Specific Information for an Airport |
+| 81 | `Div2WheelsOn` | SMALLINT | 第2备降接地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) at Diverted Airport Code2 |
+| 82 | `Div2TotalGTime` | DOUBLE | 第2备降累计地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate at Diverted Airport Code2 |
+| 83 | `Div2LongestGTime` | DOUBLE | 第2备降最长地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Ground Time Away from Gate at Diverted Airport Code2 |
+| 84 | `Div2WheelsOff` | SMALLINT | 第2备降后离地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) at Diverted Airport Code2 |
+| 85 | `Div2TailNum` | VARCHAR | 第2备降航班尾号 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Aircraft Tail Number for Diverted Airport Code2 |
+| 86 | `Div3Airport` | VARCHAR | 第3备降机场三字码 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Diverted Airport Code3 |
+| 87 | `Div3AirportID` | INTEGER | 第3备降机场 DOT 编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport ID of Diverted Airport 3. Airport ID is a Unique Key for an Airport |
+| 88 | `Div3AirportSeqID` | INTEGER | 第3备降机场时序编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport Sequence ID of Diverted Airport 3. Unique Key for Time Specific Information for an Airport |
+| 89 | `Div3WheelsOn` | SMALLINT | 第3备降接地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) at Diverted Airport Code3 |
+| 90 | `Div3TotalGTime` | DOUBLE | 第3备降累计地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate at Diverted Airport Code3 |
+| 91 | `Div3LongestGTime` | DOUBLE | 第3备降最长地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Ground Time Away from Gate at Diverted Airport Code3 |
+| 92 | `Div3WheelsOff` | SMALLINT | 第3备降后离地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) at Diverted Airport Code3 |
+| 93 | `Div3TailNum` | VARCHAR | 第3备降航班尾号 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Aircraft Tail Number for Diverted Airport Code3 |
+| 94 | `Div4Airport` | VARCHAR | 第4备降机场三字码 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Diverted Airport Code4 |
+| 95 | `Div4AirportID` | INTEGER | 第4备降机场 DOT 编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport ID of Diverted Airport 4. Airport ID is a Unique Key for an Airport |
+| 96 | `Div4AirportSeqID` | INTEGER | 第4备降机场时序编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport Sequence ID of Diverted Airport 4. Unique Key for Time Specific Information for an Airport |
+| 97 | `Div4WheelsOn` | SMALLINT | 第4备降接地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) at Diverted Airport Code4 |
+| 98 | `Div4TotalGTime` | DOUBLE | 第4备降累计地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate at Diverted Airport Code4 |
+| 99 | `Div4LongestGTime` | DOUBLE | 第4备降最长地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Ground Time Away from Gate at Diverted Airport Code4 |
+| 100 | `Div4WheelsOff` | SMALLINT | 第4备降后离地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) at Diverted Airport Code4 |
+| 101 | `Div4TailNum` | VARCHAR | 第4备降航班尾号 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Aircraft Tail Number for Diverted Airport Code4 |
+| 102 | `Div5Airport` | VARCHAR | 第5备降机场三字码 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Diverted Airport Code5 |
+| 103 | `Div5AirportID` | INTEGER | 第5备降机场 DOT 编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport ID of Diverted Airport 5. Airport ID is a Unique Key for an Airport |
+| 104 | `Div5AirportSeqID` | INTEGER | 第5备降机场时序编号 | 备降明细 | 100.00% | 改过 — 类型：字符串 → INTEGER（取值不变） | Airport Sequence ID of Diverted Airport 5. Unique Key for Time Specific Information for an Airport |
+| 105 | `Div5WheelsOn` | SMALLINT | 第5备降接地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels On Time (local time: hhmm) at Diverted Airport Code5 |
+| 106 | `Div5TotalGTime` | DOUBLE | 第5备降累计地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Total Ground Time Away from Gate at Diverted Airport Code5 |
+| 107 | `Div5LongestGTime` | DOUBLE | 第5备降最长地面时间(分钟) | 备降明细 | 100.00% | 改过 — 类型：字符串 → DOUBLE（取值不变） | Longest Ground Time Away from Gate at Diverted Airport Code5 |
+| 108 | `Div5WheelsOff` | SMALLINT | 第5备降后离地时间(hhmm) | 备降明细 | 100.00% | 改过 — 类型：字符串 hhmm → SMALLINT（数值不变，`2400` 原样保留） | Wheels Off Time (local time: hhmm) at Diverted Airport Code5 |
+| 109 | `Div5TailNum` | VARCHAR | 第5备降航班尾号 | 备降明细 | 100.00% | 没改 — 原样保留（仅编码与空值处理） | Aircraft Tail Number for Diverted Airport Code5 |
+| 110 | `CRSDepHour` | TINYINT | 【派生】计划起飞小时(0-23) | 研究问题1 时间规律 | 0.00% | 改过 — 新增列：由 `CRSDepTime` 计算：`(hhmm // 100) % 24`，处理 2400 跨夜 |  |
+| 111 | `CRSArrHour` | TINYINT | 【派生】计划到达小时(0-23) | 研究问题1 时间规律 | 0.00% | 改过 — 新增列：由 `CRSArrTime` 计算：`(hhmm // 100) % 24` |  |
+| 112 | `Route` | VARCHAR | 【派生】航线 = 起飞机场-到达机场 | 研究问题2 机场/航司/时段 | 0.00% | 改过 — 新增列：由 `Origin` 与 `Dest` 拼接：`Origin \|\| '-' \|\| Dest` |  |
+| 113 | `IsWeekend` | BOOLEAN | 【派生】是否周末(周六/周日) | 研究问题1 时间规律 | 0.00% | 改过 — 新增列：由 `DayOfWeek` 计算：`DayOfWeek IN (6,7)` |  |
+| 114 | `TotalCauseDelay` | DOUBLE | 【派生】五项原因延误之和(分钟) | 研究问题3 延误原因 | 79.11% | 改过 — 新增列：五项 `*Delay` 求和；五项全为 NULL 时结果保留 NULL |  |
+
+## 缺失率说明
+
+本数据集的缺失**几乎全部是结构性缺失**（某些行本来就不该有值），而不是采集故障。下表按缺失原因分组，数值为组内字段的实测缺失率区间。
+
+| 缺失原因 | 涉及字段 | 列数 | 缺失率 |
+|---|---|---|---|
+| 航班取消，没有实际起飞数据 | `DepTime` … `WheelsOff` | 7 | 1.31% – 1.36% |
+| 航班取消，没有落地时刻 | `ArrTime` … `TaxiIn` | 3 | 1.40% – 1.40% |
+| 航班取消或备降，没有「到达目的地」的延误 | `ArrDelay` … `AirTime` | 6 | 1.63% – 1.63% |
+| 航班未取消，因此没有取消原因码 | `CancellationCode` | 1 | 98.63% |
+| 延误原因字段只对到达延误≥15分钟的航班填写 | `CarrierDelay` … `LateAircraftDelay` | 5 | 79.11% – 79.11% |
+| 备降明细：只有备降航班才有值 | `Div1Airport` … `Div1TailNum` | 8 | 99.74% – 99.77% |
+| 备降明细：只有发生 2 次以上备降的航班才有值 | `Div2Airport` … `Div5TailNum` | 32 | 100.00% – 100.00% |
+| 该字段仅少数承运人上报 | `FirstDepTime` … `LongestAddGTime` | 3 | 99.29% – 99.29% |
+
+### 其余存在缺失的字段
+
+| 字段 | 缺失率 |
+|---|---|
+| `DivActualElapsedTime` | 99.769% |
+| `DivArrDelay` | 99.769% |
+| `DivReachedDest` | 99.745% |
+| `DivDistance` | 99.745% |
+| `TotalCauseDelay` | 79.113% |
+| `Tail_Number` | 0.230% |
+
+## 已知数据质量问题（实测发现，论文中建议说明）
+
+**有 18 条航班的到达延误≥15分钟，但航司没有报告延误原因**，占全部延误航班（4,371,303 条）的 **0.0004%**：
+
+| 情况 | 条数 | 航司 | 表现 |
+|---|---|---|---|
+| 报告了原因但全为 0 | 15 | 西南航空 WN（多数为 2025-11） | 五个原因字段均为 `0.0`，但 `ArrDelayMinutes` 为正 |
+| 完全没有报告原因 | 3 | 精神航空 F9 | 五个原因字段均为 `NULL` |
+
+处置方式：派生列 `TotalCauseDelay` 在五项原因**全为 NULL 时保留 NULL**（不伪装成 0），因此这 3 条不会污染原因占比的分母；另外 15 条的 0 值无法与「真实零延误」区分，属于源头数据的固有限制。用 `scripts/19_cause_mismatch.py` 可复现这 18 条清单。
+
+## 派生字段说明（本项目新增，非 BTS 原生）
+
+| 字段 | 计算方式 | 用途 |
+|---|---|---|
+| `CRSDepHour` | `(CRSDepTime // 100) % 24` | 时段规律分析（研究问题1/2），已处理 `2400` 跨夜 |
+| `CRSArrHour` | `(CRSArrTime // 100) % 24` | 到达时段分析 |
+| `Route` | `Origin || '-' || Dest` | 航线级聚合 |
+| `IsWeekend` | `DayOfWeek IN (6,7)` | 周末/工作日对比 |
+| `TotalCauseDelay` | 五项 `*Delay` 之和；**五项全为 NULL 时结果为 NULL** | 延误总分钟数；在有原因报告的延误航班上等于 `ArrDelayMinutes` |

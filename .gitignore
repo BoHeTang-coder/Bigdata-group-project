@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== 项目数据规则 =====
+# 原始明细数据不入库：BTS parquet/csv 每个都超过 GitHub 100MB 单文件上限
+data/raw/
+otp_*.parquet
+On_Time_Reporting_Carrier_*.csv
+*.zip
+*.7z
