@@ -23,8 +23,36 @@
 
 ## 快速开始（成员2/3 看这里）
 
-1. `pip install pandas pyarrow`
-2. 日常分析直接用底表，**不用**下载 570MB 原始数据：
+### 第 0 步：切到你自己的分支
+
+```bash
+git clone https://github.com/BoHeTang-coder/Bigdata-group-project.git
+cd Bigdata-group-project
+git checkout member2-analysis      # 成员2 用这个
+git checkout member3-parallel      # 成员3 用这个
+```
+
+> 每个人在自己的分支上干活、随时 push，不要直接动 main（main 留给最终验收）。
+> 你的分支里已经带了全部文档、8 张图和分析底表，clone 下来即可开工。
+
+### 不想用 git？直接下载底表文件
+
+浏览器打开（需先用你的 GitHub 账号登录并被加入仓库协作）：
+
+- 底表 CSV（24MB，日常分析用这个）：
+  <https://github.com/BoHeTang-coder/Bigdata-group-project/raw/member1-deliverables/data/aggregated/agg_month_hour_airline_origin.csv>
+- 底表使用说明（列含义 + 口径代码）：
+  <https://github.com/BoHeTang-coder/Bigdata-group-project/blob/member1-deliverables/data/aggregated/README_使用说明.md>
+- 接续方案（你的任务拆解）：
+  <https://github.com/BoHeTang-coder/Bigdata-group-project/blob/member1-deliverables/docs/接续方案_给成员2和3.md>
+
+### 环境准备（一条命令）
+
+```bash
+pip install pandas pyarrow matplotlib scikit-learn mlxtend
+```
+
+### 用底表做分析（3 行代码起步）
 
 ```python
 import pandas as pd
@@ -32,8 +60,8 @@ df = pd.read_csv("data/aggregated/agg_month_hour_airline_origin.csv")
 df["delay_rate"] = df.delayed / df.executed   # 延误率，分母 = 实际执行航班
 ```
 
-3. 列含义与常用口径见 `data/aggregated/README_使用说明.md`；字段级细节见 `docs/02_数据字典.md`。
-4. ⚠️ 分析口径铁律（详细版见 `docs/00_先读我_讲解文档.md` 第 2、6 章）：
+- 列含义与常用口径见 `data/aggregated/README_使用说明.md`；字段级细节见 `docs/02_数据字典.md`。
+- ⚠️ 分析口径铁律（详细版见 `docs/00_先读我_讲解文档.md` 第 2、6 章）：
    - 延误率分母 = 实际执行航班（executed），不是全部航班；
    - 五类延误原因只对延误航班填写，原因占比分母 = 延误航班的延误总分钟。
 
