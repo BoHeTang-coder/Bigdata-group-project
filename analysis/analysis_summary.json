@@ -1,0 +1,11 @@
+{
+  "scheduled": 20928579,
+  "delay_denominator": 20588134,
+  "delayed": 4371303,
+  "airports_total": 362,
+  "airports_clustered": 101,
+  "clustered_flight_coverage": 0.9181884255017982,
+  "selected_k": 3,
+  "candidate_itemsets": 12757,
+  "selected_rules": 107
+}
