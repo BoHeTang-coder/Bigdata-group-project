@@ -1,0 +1,22 @@
+# ===== 大文件：数据不入库，用 src/01_data_processing 的 01_download.py 重新下载 =====
+*.parquet
+*.zip
+data/raw/
+data/extracted/
+
+# ===== 隐私：report/ 含组员姓名和学号，公开仓库不上传 =====
+# 如果仓库设为 Private，删掉下面这行即可把报告一起放进去
+report/
+
+# ===== 草稿与临时文件 =====
+src/01_data_processing/code/scripts/_explore/
+
+# ===== Python 常规忽略 =====
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ===== 本工具的工作目录 =====
+.workbuddy/

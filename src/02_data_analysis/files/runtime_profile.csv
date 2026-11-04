@@ -1,0 +1,10 @@
+stage,seconds
+"file hashes, schema and row audit",0.489
+annual overview,0.29
+airport-level aggregation,0.66
+"clustering, sensitivity and PCA",0.345
+transaction cube aggregation,1.14
+exhaustive rule mining,0.577
+temporal-rule validation,0.259
+within-stratum robustness check,0.135
+rule figures,0.279

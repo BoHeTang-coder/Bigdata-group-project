@@ -1,0 +1,13 @@
+# Merged from the three module-level requirement files.
+# Module 1 (data processing) was verified on Python 3.12 with:
+#   duckdb 1.5.5, pandas 3.0.5, pyarrow 25.0.1, matplotlib 3.11.2, numpy 2.5.3, Pillow 12.3.0
+# Module 2 (clustering & rule mining) was verified with pandas 2.x / scikit-learn 1.9.
+
+duckdb>=1.5
+pandas>=2.2
+numpy>=2.3
+pyarrow>=19
+scikit-learn>=1.9
+matplotlib>=3.11
+Pillow>=11
+nbformat>=5.11

@@ -1,0 +1,16 @@
+[
+  {
+    "total_flights":20928579,
+    "cancelled":287134,
+    "diverted":53309,
+    "operated":20588134,
+    "delayed15":4371303,
+    "delay_rate":0.2123214761,
+    "mean_arr_delay":7.4138339103,
+    "median_arr_delay":-6.0,
+    "mean_dep_delay":12.8058754123,
+    "total_cause_minutes":311427461.0,
+    "n_carriers":15,
+    "n_airports":362
+  }
+]

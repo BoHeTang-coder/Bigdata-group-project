@@ -1,0 +1,2 @@
+candidate_itemsets,selected_rules,min_joint_support,min_train_antecedent_n,min_train_lift,train_flights,test_flights,train_delay_baseline,test_delay_baseline
+12757,107,0.005,50000,1.2,13708650,6879484,0.20692518957008896,0.2230745794306666

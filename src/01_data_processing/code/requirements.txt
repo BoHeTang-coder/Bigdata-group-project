@@ -1,0 +1,7 @@
+# Versions observed in the original project's Python 3.12.1 environment.
+duckdb==1.5.5
+pandas==3.0.5
+pyarrow==25.0.1
+matplotlib==3.11.2
+numpy==2.5.3
+Pillow==12.3.0
